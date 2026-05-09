@@ -28,7 +28,14 @@ let package = Package(
 
         .executableTarget(
             name: "FanCtlApp",
-            dependencies: ["SMCKit", "FanCtlProtocol"]
+            dependencies: ["SMCKit", "FanCtlProtocol"],
+            swiftSettings: [
+                // SwiftUI + ObservableObject + XPC reply blocks crossing
+                // queues trips Swift 6's strict isolation checks even when
+                // we mark `@unchecked Sendable`. The rest of the package
+                // stays in Swift 6.
+                .swiftLanguageMode(.v5)
+            ]
         ),
 
         .testTarget(
