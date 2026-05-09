@@ -1,0 +1,15 @@
+{
+  "name": "fanctl",
+  "version": "0.0.0-development",
+  "private": true,
+  "description": "Native macOS fan controller for Apple Silicon. Tooling-only manifest used by semantic-release.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Juanipis/fanctl.git"
+  },
+  "author": "Juan Pablo Díaz Correa <juanipis@gmail.com> (https://github.com/Juanipis)",
+  "license": "MIT",
+  "release": {
+    "extends": "./.releaserc.json"
+  }
+}

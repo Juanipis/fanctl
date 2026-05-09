@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jpdiaz.FanCtl.Helper</string>
+
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/com.jpdiaz.FanCtl.Helper</string>
+
+    <key>MachServices</key>
+    <dict>
+        <key>com.jpdiaz.FanCtl.Helper</key>
+        <true/>
+    </dict>
+
+    <!-- Identifier-only requirement. With ad-hoc signing there is no
+         certificate anchor, so we accept any binary signed with the same
+         designated identifier. Tighten to "anchor apple generic and
+         identifier ..." once a Developer ID is available. -->
+    <key>SMAuthorizedClients</key>
+    <array>
+        <string>identifier "com.jpdiaz.FanCtl"</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/com.jpdiaz.FanCtl.Helper.log</string>
+    <key>StandardOutPath</key>
+    <string>/var/log/com.jpdiaz.FanCtl.Helper.log</string>
+</dict>
+</plist>

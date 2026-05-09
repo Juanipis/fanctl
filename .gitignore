@@ -1,0 +1,26 @@
+# Swift / SPM
+.build/
+.swiftpm/
+*.xcodeproj
+Package.resolved
+
+# macOS
+.DS_Store
+*.swp
+*.swo
+
+# Node (semantic-release)
+node_modules/
+package-lock.json
+
+# Build artifacts
+*.zip
+*.dmg
+*.app
+
+# Logs
+*.log
+
+# Env
+.env
+.env.local

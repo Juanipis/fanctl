@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: swift test
+    runs-on: macos-15
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test --parallel
+
+  build-app:
+    name: assemble FanCtl.app (smoke)
+    runs-on: macos-15
+    timeout-minutes: 15
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build .app (debug)
+        env:
+          VERSION: ci-${{ github.sha }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: bash Bundle/build-app.sh debug
+
+      - name: Verify bundle structure
+        run: |
+          test -f .build/FanCtl.app/Contents/Info.plist
+          test -x .build/FanCtl.app/Contents/MacOS/FanCtlApp
+          test -x .build/FanCtl.app/Contents/MacOS/com.jpdiaz.FanCtl.Helper
+          test -f .build/FanCtl.app/Contents/Library/LaunchDaemons/com.jpdiaz.FanCtl.Helper.plist
+          codesign -dv .build/FanCtl.app
