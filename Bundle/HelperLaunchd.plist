@@ -31,10 +31,7 @@
         <key>SuccessfulExit</key>
         <false/>
     </dict>
-
-    <key>StandardErrorPath</key>
-    <string>/var/log/com.jpdiaz.FanCtl.Helper.log</string>
-    <key>StandardOutPath</key>
-    <string>/var/log/com.jpdiaz.FanCtl.Helper.log</string>
+    <!-- Logging goes through os.Logger / unified log; inspect with:
+         sudo log stream --predicate 'subsystem == "com.jpdiaz.FanCtl"' -->
 </dict>
 </plist>
