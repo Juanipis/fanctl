@@ -10,7 +10,6 @@ permissions:
   issues: write
   pull-requests: write
 
-# Only one release at a time.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -24,8 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Full history so semantic-release can read commit messages and
-          # update CHANGELOG.md / package.json without diverging.
           fetch-depth: 0
           persist-credentials: true
 
@@ -38,6 +35,15 @@ jobs:
           xcodebuild -version
           swift --version
           node --version
+
+      # Sparkle ships sign_update inside its (deprecated) cask. We pull it
+      # via brew, clear the quarantine xattr so Gatekeeper doesn't gate
+      # us out, and let the @semantic-release/exec prepareCmd reach it.
+      - name: Install Sparkle CLI tools
+        run: |
+          brew install --cask sparkle || brew install --cask sparkle --force
+          sudo xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/sparkle 2>/dev/null || true
+          ls /opt/homebrew/Caskroom/sparkle/*/bin/sign_update
 
       - name: Install semantic-release
         run: |
@@ -54,6 +60,10 @@ jobs:
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Tells semantic-release to invoke our build via @semantic-release/exec
-          # before the GitHub release step uploads assets.
+          # Used by scripts/update-appcast.sh during prepareCmd.
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          # Used by scripts/bump-cask.sh during successCmd to push to the
+          # Juanipis/homebrew-tap repo. Optional — bump-cask exits cleanly
+          # if the secret is missing.
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: npx semantic-release

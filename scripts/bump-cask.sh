@@ -31,7 +31,15 @@ SHA="$(curl -fsSL "$SHA_URL" | tr -d '[:space:]')"
 echo "    $SHA"
 
 echo "==> Cloning $TAP_REPO"
-git clone --depth=1 "https://github.com/$TAP_REPO.git" "$WORK_DIR/tap"
+if [ -n "${HOMEBREW_TAP_TOKEN:-}" ]; then
+    # CI: clone with the token baked into the URL so we can push back.
+    git clone --depth=1 \
+        "https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/$TAP_REPO.git" \
+        "$WORK_DIR/tap"
+else
+    # Local dev: rely on the user's existing git/SSH credentials.
+    git clone --depth=1 "https://github.com/$TAP_REPO.git" "$WORK_DIR/tap"
+fi
 CASK="$WORK_DIR/tap/Casks/fanctl.rb"
 
 echo "==> Rewriting cask"

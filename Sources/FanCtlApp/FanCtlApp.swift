@@ -10,6 +10,7 @@ private let log = Logger(subsystem: "com.juanipis.FanCtl", category: "App")
 struct FanCtlApp: App {
     @StateObject private var client = HelperClient()
     @StateObject private var installer = HelperInstaller()
+    @StateObject private var updater = Updater()
     @State private var showAllTemps = false
 
     var body: some Scene {
@@ -17,6 +18,7 @@ struct FanCtlApp: App {
             MenuContent(showAllTemps: $showAllTemps)
                 .environmentObject(client)
                 .environmentObject(installer)
+                .environmentObject(updater)
                 .frame(width: 360)
                 .onAppear { client.startPolling() }
                 .onDisappear { client.stopPolling() }
@@ -153,6 +155,7 @@ struct Footer: View {
 }
 
 struct AboutCard: View {
+    @EnvironmentObject var updater: Updater
     private static let version: String =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
     private static let build: String =
@@ -207,7 +210,22 @@ struct AboutCard: View {
             }
             .buttonStyle(.plain)
 
-            Text("MIT-licensed.")
+            Button {
+                updater.checkNow()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.circle")
+                    Text(updater.canCheck ? "Check for Updates…" : "Checking…")
+                    Spacer()
+                }
+                .font(.caption)
+                .padding(.vertical, 6).padding(.horizontal, 10)
+                .background(.thinMaterial, in: .rect(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!updater.canCheck)
+
+            Text("MIT-licensed. Auto-updates via Sparkle.")
                 .font(.caption2).foregroundStyle(.tertiary)
         }
     }

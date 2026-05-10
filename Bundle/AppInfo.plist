@@ -22,5 +22,13 @@
     <key>NSPrincipalClass</key><string>NSApplication</string>
     <key>NSSupportsAutomaticTermination</key><true/>
     <key>NSSupportsSuddenTermination</key><false/>
+
+    <!-- Sparkle auto-update configuration. -->
+    <key>SUFeedURL</key><string>https://juanipis.github.io/fanctl/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>4cp6uxVBZGZSvdXZqvLJ3ae+b0D5nmtohVWFcvhZJRY=</string>
+    <key>SUEnableAutomaticChecks</key><true/>
+    <key>SUEnableInstallerLauncherService</key><true/>
+    <!-- Once a day. The user can also "Check for Updates…" from the popover. -->
+    <key>SUScheduledCheckInterval</key><integer>86400</integer>
 </dict>
 </plist>

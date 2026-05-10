@@ -11,6 +11,12 @@ let package = Package(
         .executable(name: "FanCtlHelper", targets: ["FanCtlHelper"]),
         .executable(name: "FanCtlApp", targets: ["FanCtlApp"]),
     ],
+    dependencies: [
+        // Sparkle handles in-app auto-updates: appcast polling, signed
+        // download, atomic install, restart. EdDSA signing is enforced
+        // by SUPublicEDKey in Info.plist.
+        .package(url: "https://github.com/sparkle-project/Sparkle.git", from: "2.6.0"),
+    ],
     targets: [
         .target(name: "SMCKit"),
 
@@ -28,7 +34,11 @@ let package = Package(
 
         .executableTarget(
             name: "FanCtlApp",
-            dependencies: ["SMCKit", "FanCtlProtocol"],
+            dependencies: [
+                "SMCKit",
+                "FanCtlProtocol",
+                .product(name: "Sparkle", package: "Sparkle"),
+            ],
             swiftSettings: [
                 // SwiftUI + ObservableObject + XPC reply blocks crossing
                 // queues trips Swift 6's strict isolation checks even when

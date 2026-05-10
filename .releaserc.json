@@ -27,13 +27,14 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "VERSION=${nextRelease.version} BUILD_NUMBER=${process.env.GITHUB_RUN_NUMBER || '1'} bash Bundle/build-app.sh release && VERSION=${nextRelease.version} bash Bundle/package-zip.sh"
+        "prepareCmd": "VERSION=${nextRelease.version} BUILD_NUMBER=${process.env.GITHUB_RUN_NUMBER || '1'} bash Bundle/build-app.sh release && VERSION=${nextRelease.version} bash Bundle/package-zip.sh && VERSION=${nextRelease.version} bash scripts/update-appcast.sh",
+        "successCmd": "VERSION=${nextRelease.version} bash scripts/bump-cask.sh || echo 'cask bump skipped (HOMEBREW_TAP_TOKEN missing or repo unavailable)'"
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md"],
+        "assets": ["CHANGELOG.md", "docs/appcast.xml"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
