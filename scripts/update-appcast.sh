@@ -56,7 +56,10 @@ echo "    $SIGNATURE"
 # Sparkle accepts RFC 2822 dates.
 PUB_DATE="$(LC_ALL=C TZ=UTC date '+%a, %d %b %Y %H:%M:%S +0000')"
 
-ITEM=$(cat <<XML
+# Stage the new <item> in a temp file. Multi-line strings + awk -v fight
+# enough that piping the block in via cat is the cleaner option.
+ITEM_FILE="$(mktemp)"
+cat > "$ITEM_FILE" <<XML
     <item>
       <title>FanCtl $VERSION</title>
       <pubDate>$PUB_DATE</pubDate>
@@ -66,20 +69,23 @@ ITEM=$(cat <<XML
       <sparkle:releaseNotesLink>$RELEASE_NOTES_URL</sparkle:releaseNotesLink>
       <enclosure
           url="$ZIP_URL"
-          length="$ZIP_SIZE"
           type="application/zip"
           $SIGNATURE/>
     </item>
 XML
-)
 
-# Insert immediately before </channel>. We keep the most-recent items at
-# the top so older Sparkle clients still find the latest.
+# Insert immediately before </channel>. Most-recent first so older Sparkle
+# clients still find the latest entry.
 TMP_OUT="$(mktemp)"
-awk -v item="$ITEM" '
-    /<\/channel>/ && !done { print item; done=1 }
-    { print }
-' "$APPCAST" > "$TMP_OUT"
+inserted=""
+while IFS= read -r line || [ -n "$line" ]; do
+    if [ -z "$inserted" ] && [[ "$line" == *"</channel>"* ]]; then
+        cat "$ITEM_FILE" >> "$TMP_OUT"
+        inserted=1
+    fi
+    printf '%s\n' "$line" >> "$TMP_OUT"
+done < "$APPCAST"
 mv "$TMP_OUT" "$APPCAST"
+rm -f "$ITEM_FILE"
 
 echo "==> appended <item> for $VERSION to $APPCAST"
