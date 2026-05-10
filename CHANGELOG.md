@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/Juanipis/fanctl/compare/v1.1.0...v1.2.0) (2026-05-10)
+
+### Features
+
+* **install:** add curl-pipeable remote installer ([c75c403](https://github.com/Juanipis/fanctl/commit/c75c4036f92901d6d81f95efb52d6367c3fb42d8))
+
 ## [1.1.0](https://github.com/Juanipis/fanctl/compare/v1.0.0...v1.1.0) (2026-05-10)
 
 ### Features
