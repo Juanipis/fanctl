@@ -1,3 +1,9 @@
+## [1.5.1](https://github.com/Juanipis/fanctl/compare/v1.5.0...v1.5.1) (2026-05-10)
+
+### Bug Fixes
+
+* **bundle:** embed Sparkle.framework + add bundle rpath ([a7c104f](https://github.com/Juanipis/fanctl/commit/a7c104f0dbab153b5965896f82ce0f76a2ce110f))
+
 ## [1.5.0](https://github.com/Juanipis/fanctl/compare/v1.4.0...v1.5.0) (2026-05-10)
 
 ### Features

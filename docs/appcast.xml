@@ -17,5 +17,17 @@
           type="application/zip"
           sparkle:edSignature="JVyxORXSPboyt3uwRp1VAHFsJCh9rV/A05ZRWuNWWdPB7tVE3x4qSfVtpYesRqk7N8CMgCn4xyAY/AK7EypOCA==" length="1659549"/>
     </item>
+    <item>
+      <title>FanCtl 1.5.1</title>
+      <pubDate>Sun, 10 May 2026 00:48:02 +0000</pubDate>
+      <sparkle:version>1.5.1</sparkle:version>
+      <sparkle:shortVersionString>1.5.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/Juanipis/fanctl/releases/tag/v1.5.1</sparkle:releaseNotesLink>
+      <enclosure
+          url="https://github.com/Juanipis/fanctl/releases/download/v1.5.1/FanCtl-1.5.1.zip"
+          type="application/zip"
+          sparkle:edSignature="WvpIyOf5dsB0JdnrimKItTG9cFJTe0qOImxRowhKB6luQNoUaxp3fHp98tErpvtwSF7qOfNklw7aiFEDALAICQ==" length="2674307"/>
+    </item>
   </channel>
 </rss>
