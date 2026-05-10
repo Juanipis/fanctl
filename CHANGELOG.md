@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/Juanipis/fanctl/compare/v1.2.0...v1.3.0) (2026-05-10)
+
+### Features
+
+* **install:** publish Homebrew Cask in Juanipis/tap ([601d8c8](https://github.com/Juanipis/fanctl/commit/601d8c88f70200ee97a085cb5cfbc1f8b6726293))
+
 ## [1.2.0](https://github.com/Juanipis/fanctl/compare/v1.1.0...v1.2.0) (2026-05-10)
 
 ### Features
