@@ -1,3 +1,21 @@
+## [1.4.0](https://github.com/Juanipis/fanctl/compare/v1.3.0...v1.4.0) (2026-05-10)
+
+### ⚠ BREAKING CHANGES
+
+* existing v1.x installs need to be uninstalled before
+v2.0.0 can run, because the helper bundle ID changed and SMAppService
+treats it as a new daemon. Users should either:
+
+  brew uninstall --cask fanctl && brew install --cask Juanipis/tap/fanctl
+
+or run Bundle/uninstall.sh from the v1.x source tree, then reinstall.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
+### Features
+
+* rename bundle ID from com.jpdiaz to com.juanipis ([e468e48](https://github.com/Juanipis/fanctl/commit/e468e48e703a08f51fdaad3b7ac80ff2b1fa047f))
+
 ## [1.3.0](https://github.com/Juanipis/fanctl/compare/v1.2.0...v1.3.0) (2026-05-10)
 
 ### Features
