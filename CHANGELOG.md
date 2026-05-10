@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/Juanipis/fanctl/compare/v1.7.0...v1.8.0) (2026-05-10)
+
+### Features
+
+* **polish:** history persistence, hysteresis, Spanish, landing page ([f729ae0](https://github.com/Juanipis/fanctl/commit/f729ae02021bdfcb1987ad5a1157dd21a99cc931))
+
 ## [1.7.0](https://github.com/Juanipis/fanctl/compare/v1.6.0...v1.7.0) (2026-05-10)
 
 ### Features
