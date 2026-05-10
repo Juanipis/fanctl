@@ -9,7 +9,7 @@ import SwiftUI
 @MainActor
 final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
 
-    @Published private(set) var canCheck: Bool = true
+    @Published var canCheck: Bool = true
 
     let controller: SPUStandardUpdaterController
 
