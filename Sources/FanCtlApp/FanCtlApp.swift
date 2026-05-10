@@ -73,6 +73,9 @@ struct MenuContent: View {
                 NotInstalledView().padding(16)
             } else if let snap = client.snapshot {
                 VStack(spacing: 12) {
+                    if client.helperOutOfDate {
+                        OutdatedHelperBanner()
+                    }
                     Hero(snapshot: snap, history: client.history)
                     ModePicker(active: snap.activeMode)
                     if snap.activeMode == .manual, let fan = snap.fans.first {
@@ -543,6 +546,64 @@ struct TempChip: View {
     }
 }
 
+// MARK: - Outdated helper banner
+
+/// The running helper is from an older app version. Walking the user
+/// through restarting it: SMAppService.unregister + register makes
+/// launchd boot out the running daemon and load the new binary on disk.
+struct OutdatedHelperBanner: View {
+    @EnvironmentObject var client: HelperClient
+    @EnvironmentObject var installer: HelperInstaller
+    @State private var pasteboardCopied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text("Helper is out of date")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+            }
+            Text("The background daemon was launched by a previous version of FanCtl and doesn't recognise this feature yet. Restart it once and you're set.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 6) {
+                Button {
+                    installer.reregister()
+                    client.clearOutOfDateFlag()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { client.refresh() }
+                } label: {
+                    Label("Restart helper", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .tint(.orange)
+
+                Button {
+                    let cmd = "sudo launchctl kickstart -k system/com.juanipis.FanCtl.Helper"
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(cmd, forType: .string)
+                    pasteboardCopied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { pasteboardCopied = false }
+                } label: {
+                    Label(pasteboardCopied ? "Copied" : "Copy terminal command",
+                          systemImage: pasteboardCopied ? "checkmark" : "terminal")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+        .padding(12)
+        .background(.orange.opacity(0.10), in: .rect(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.orange.opacity(0.35), lineWidth: 1)
+        )
+    }
+}
+
 // MARK: - Not-installed view
 
 struct NotInstalledView: View {
@@ -606,6 +667,21 @@ final class HelperInstaller: ObservableObject {
             lastStatus = "Unregistered."
         } catch {
             lastStatus = "unregister failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Forces launchd to load the helper binary currently on disk, by
+    /// unregistering and re-registering. Used to recover from an outdated
+    /// daemon after an in-place app upgrade.
+    func reregister() {
+        try? service.unregister()
+        do {
+            try service.register()
+            lastStatus = "Helper restarted."
+            log.info("SMAppService.reregister OK")
+        } catch {
+            lastStatus = "Restart failed: \(error.localizedDescription) — try the terminal command."
+            log.error("reregister failed: \(String(describing: error), privacy: .public)")
         }
     }
 }

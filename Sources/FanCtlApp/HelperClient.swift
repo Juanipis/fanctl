@@ -21,6 +21,10 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
     @Published private(set) var snapshot: SystemSnapshot?
     @Published private(set) var lastError: String?
     @Published private(set) var isConnected: Bool = false
+    /// True when the running helper rejected a feature this app version
+    /// knows about — almost always means launchd is still running the
+    /// previous helper binary and needs to be kicked.
+    @Published private(set) var helperOutOfDate: Bool = false
     /// 60-sample ring buffer (~1 minute at 1 Hz polling).
     @Published private(set) var history: [HistorySample] = []
     private let historyCap = 60
@@ -118,11 +122,24 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
     func setMode(_ mode: ControlMode) {
         proxy()?.setMode(modeId: mode.rawValue) { [weak self] err in
             DispatchQueue.main.async {
-                if let err { self?.lastError = err }
+                if let err {
+                    self?.lastError = err
+                    // "unknown mode: …" means we're talking to a helper
+                    // older than this app — surface the dedicated banner
+                    // instead of a raw error string.
+                    if err.lowercased().contains("unknown mode") {
+                        self?.helperOutOfDate = true
+                        self?.lastError = nil
+                    }
+                }
                 self?.refresh()
             }
         }
     }
+
+    /// Clears the `helperOutOfDate` flag — call after the user restarts
+    /// the helper so the banner disappears.
+    func clearOutOfDateFlag() { helperOutOfDate = false }
 
     func setManual(fan: Int, rpm: Double) {
         proxy()?.setManual(fan: fan, rpm: rpm) { [weak self] err in
