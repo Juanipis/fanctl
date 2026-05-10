@@ -1,3 +1,14 @@
+## [1.5.0](https://github.com/Juanipis/fanctl/compare/v1.4.0...v1.5.0) (2026-05-10)
+
+### Features
+
+* **updater:** add in-app auto-updates via Sparkle ([66a9ca1](https://github.com/Juanipis/fanctl/commit/66a9ca14245873962f09686de448cf68ac3e9258))
+
+### Bug Fixes
+
+* **updater:** make canCheck publicly settable so the proxy can flip it ([5fa8aaa](https://github.com/Juanipis/fanctl/commit/5fa8aaae820335604fbb7dfa2d4038530a717a41))
+* **updater:** use bash loop instead of awk for appcast item insertion ([5534a75](https://github.com/Juanipis/fanctl/commit/5534a7523a08cee407fe3354cc51cb12e11c4382))
+
 ## [1.4.0](https://github.com/Juanipis/fanctl/compare/v1.3.0...v1.4.0) (2026-05-10)
 
 ### ⚠ BREAKING CHANGES

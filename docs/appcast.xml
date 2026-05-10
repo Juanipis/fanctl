@@ -5,5 +5,17 @@
     <link>https://juanipis.github.io/fanctl/appcast.xml</link>
     <description>Native macOS fan controller for Apple Silicon.</description>
     <language>en</language>
+    <item>
+      <title>FanCtl 1.5.0</title>
+      <pubDate>Sun, 10 May 2026 00:42:00 +0000</pubDate>
+      <sparkle:version>1.5.0</sparkle:version>
+      <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/Juanipis/fanctl/releases/tag/v1.5.0</sparkle:releaseNotesLink>
+      <enclosure
+          url="https://github.com/Juanipis/fanctl/releases/download/v1.5.0/FanCtl-1.5.0.zip"
+          type="application/zip"
+          sparkle:edSignature="JVyxORXSPboyt3uwRp1VAHFsJCh9rV/A05ZRWuNWWdPB7tVE3x4qSfVtpYesRqk7N8CMgCn4xyAY/AK7EypOCA==" length="1659549"/>
+    </item>
   </channel>
 </rss>
