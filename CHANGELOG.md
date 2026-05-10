@@ -1,3 +1,9 @@
+## [1.6.0](https://github.com/Juanipis/fanctl/compare/v1.5.1...v1.6.0) (2026-05-10)
+
+### Features
+
+* **modes:** add custom curve editor + sensor picker + notifications ([fd7e7c2](https://github.com/Juanipis/fanctl/commit/fd7e7c21a041b496edf9bb8aa83bbeb2be996986))
+
 ## [1.5.1](https://github.com/Juanipis/fanctl/compare/v1.5.0...v1.5.1) (2026-05-10)
 
 ### Bug Fixes
