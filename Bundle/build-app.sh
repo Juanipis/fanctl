@@ -48,6 +48,15 @@ cp "$BIN_DIR/FanCtlApp"              "$APP/Contents/MacOS/FanCtlApp"
 cp "$BIN_DIR/FanCtlHelper"           "$APP/Contents/MacOS/$HELPER_BUNDLE_NAME"
 cp "$ROOT/Bundle/HelperLaunchd.plist" "$APP/Contents/Library/LaunchDaemons/$HELPER_BUNDLE_NAME.plist"
 
+# SwiftPM emits localizations + processed resources into a sidecar bundle
+# named "<package>_<target>.bundle". Bundle.module looks for it next to
+# the executable, so we copy it into Contents/Resources alongside the
+# .icns. Without this, NSLocalizedString returns the raw key.
+SPM_BUNDLE="$BIN_DIR/fanctl_FanCtlApp.bundle"
+if [ -d "$SPM_BUNDLE" ]; then
+    cp -R "$SPM_BUNDLE" "$APP/Contents/Resources/fanctl_FanCtlApp.bundle"
+fi
+
 # Sparkle ships as a versioned .framework with embedded XPC services
 # (Autoupdate.app, downloader, installer). The app's @rpath points to
 # Contents/Frameworks, so we copy the whole thing there. -R preserves

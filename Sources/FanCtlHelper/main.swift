@@ -57,6 +57,11 @@ final class ModeController: @unchecked Sendable {
     /// flicker by 1–2°C.
     private var smoothedC: Double = 0
     private let smoothingAlpha: Double = 0.3
+    /// Last RPM fraction we actually wrote to the SMC. Used together with
+    /// `hysteresisFrac` to suppress micro-changes that the user can hear
+    /// but that don't actually serve any cooling purpose.
+    private var lastWrittenFrac: Double = -1
+    private let hysteresisFrac: Double = 0.05  // 5% of [Mn..Mx]
 
     private init() {
         if let raw = UserDefaults.standard.string(forKey: prefsKey),
@@ -84,6 +89,7 @@ final class ModeController: @unchecked Sendable {
         queue.sync {
             current = new
             UserDefaults.standard.set(new.rawValue, forKey: prefsKey)
+            lastWrittenFrac = -1   // force the first tick after a mode change to write
         }
         if new == .auto {
             try onSMC { try fans.setAllAuto() }
@@ -154,10 +160,21 @@ final class ModeController: @unchecked Sendable {
             smoothedC = smoothingAlpha * raw + (1 - smoothingAlpha) * smoothedC
 
             let frac = curve.evaluate(tempC: smoothedC).clamped(to: 0...1)
+
+            // Hysteresis: only re-issue a write when the new fraction
+            // differs from the last one by more than `hysteresisFrac`,
+            // OR the fraction crossed a "rail" (0 or 1). The rail
+            // exception keeps the fan from getting stuck slightly off
+            // when the curve really has hit min or max.
+            let hitsRail = frac == 0 || frac == 1
+            let movedEnough = abs(frac - lastWrittenFrac) >= hysteresisFrac
+            guard lastWrittenFrac < 0 || hitsRail || movedEnough else { return }
+
             for fan in snap.1 {
                 let target = fan.min + frac * (fan.max - fan.min)
                 try? onSMC { try fans.setManual(fan.index, rpm: target) }
             }
+            lastWrittenFrac = frac
         } catch {
             log.error("Curve tick failed: \(String(describing: error), privacy: .public)")
         }

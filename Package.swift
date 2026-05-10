@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "fanctl",
+    defaultLocalization: "en",
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "SMCKit", targets: ["SMCKit"]),
@@ -38,6 +39,13 @@ let package = Package(
                 "SMCKit",
                 "FanCtlProtocol",
                 .product(name: "Sparkle", package: "Sparkle"),
+            ],
+            resources: [
+                // SwiftPM picks up *.lproj directories beside the sources
+                // and bakes them into Bundle.module. Used for the Spanish
+                // localization. English is the development language and
+                // lives in en.lproj as the canonical reference.
+                .process("Resources"),
             ],
             swiftSettings: [
                 // SwiftUI + ObservableObject + XPC reply blocks crossing

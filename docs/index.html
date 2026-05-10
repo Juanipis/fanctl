@@ -1,8 +1,384 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>FanCtl</title>
-<meta http-equiv="refresh" content="0; url=https://github.com/Juanipis/fanctl">
-<style>body{font-family:-apple-system,system-ui,sans-serif;max-width:40em;margin:4em auto;padding:0 1em;color:#222}</style>
-<h1>FanCtl</h1>
-<p>Native macOS fan controller for Apple Silicon. Redirecting to <a href="https://github.com/Juanipis/fanctl">the project page</a>.</p>
-<p>Sparkle update feed: <a href="appcast.xml">appcast.xml</a></p>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FanCtl — Native macOS fan controller for Apple Silicon</title>
+<meta name="description" content="A polished, open-source fan controller for Apple Silicon Macs. Smart cooling modes, live charts, Liquid Glass menu-bar UI.">
+<meta property="og:title" content="FanCtl">
+<meta property="og:description" content="Native macOS fan controller for Apple Silicon. Smart modes, live charts, MIT-licensed.">
+<meta property="og:url" content="https://juanipis.github.io/fanctl/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🌀%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --bg-2: #11151c;
+    --fg: #e6edf3;
+    --muted: #8b95a5;
+    --accent: #4ea1ff;
+    --accent-2: #5ed3fa;
+    --border: #1f2630;
+    --gradient: linear-gradient(135deg, #2e74e6 0%, #5ed3fa 100%);
+    --radius: 16px;
+    --max: 1100px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#fafcff; --bg-2:#f0f4fa; --fg:#0f1822; --muted:#5b6573; --border:#dde3ed; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+  header {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(11,14,20,0.7);
+    backdrop-filter: saturate(140%) blur(18px);
+    position: sticky; top: 0; z-index: 10;
+  }
+  @media (prefers-color-scheme: light) {
+    header { background: rgba(250,252,255,0.75); }
+  }
+  .nav {
+    display: flex; align-items: center; gap: 18px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 17px; letter-spacing: -0.01em;
+  }
+  .brand-icon {
+    width: 28px; height: 28px;
+    background: var(--gradient);
+    border-radius: 7px;
+    display: grid; place-items: center;
+    color: white; font-size: 15px; font-weight: 700;
+  }
+  nav .links { margin-left: auto; display: flex; gap: 22px; }
+  nav .links a { color: var(--muted); font-size: 14px; font-weight: 500; }
+  nav .links a:hover { color: var(--fg); text-decoration: none; }
+
+  .hero {
+    padding: 88px 0 56px;
+    text-align: center;
+    position: relative;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(94,211,250,0.18), transparent 60%);
+    z-index: -1;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(78,161,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(78,161,255,0.30);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+    margin-bottom: 22px;
+  }
+  h1 {
+    font-size: clamp(36px, 6.5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  h1 .grad {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede {
+    font-size: clamp(16px, 2vw, 19px);
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 30px;
+  }
+  .cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--gradient);
+    color: white;
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    box-shadow: 0 6px 24px rgba(78,161,255,0.35);
+    transition: transform 120ms;
+  }
+  .cta:hover { transform: translateY(-1px); text-decoration: none; }
+  .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .cta.secondary {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+  .cta.secondary:hover { background: var(--bg-2); }
+  .install {
+    margin: 22px auto 0;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 560px;
+    font: 13px/1.5 "SF Mono", ui-monospace, Menlo, monospace;
+    color: var(--fg);
+    text-align: left;
+    overflow-x: auto;
+  }
+  .install .prompt { color: var(--muted); user-select: none; }
+
+  section { padding: 64px 0; border-top: 1px solid var(--border); }
+  section h2 {
+    font-size: 28px; letter-spacing: -0.02em; margin: 0 0 8px; font-weight: 700;
+  }
+  section .subtitle { color: var(--muted); font-size: 15px; margin-bottom: 32px; }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+  .feature {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .feature .icon {
+    width: 36px; height: 36px;
+    background: var(--gradient);
+    border-radius: 9px;
+    display: grid; place-items: center;
+    color: white; font-size: 17px;
+    margin-bottom: 14px;
+  }
+  .feature h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .modes {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .mode {
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .mode-name { font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .mode-curve { color: var(--muted); font-size: 13px; font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+  .mode-desc { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  pre {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font: 13px/1.55 "SF Mono", ui-monospace, Menlo, monospace;
+    color: var(--fg);
+    overflow-x: auto;
+  }
+
+  .arch {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    font: 12px/1.5 "SF Mono", ui-monospace, Menlo, monospace;
+    color: var(--muted);
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  footer {
+    padding: 40px 0 60px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="brand-icon">⌥</div>
+      <span>FanCtl</span>
+    </div>
+    <div class="links">
+      <a href="#install">Install</a>
+      <a href="#modes">Modes</a>
+      <a href="https://github.com/Juanipis/fanctl">GitHub</a>
+      <a href="https://github.com/Juanipis/fanctl/releases/latest">Releases</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="badge">For Apple Silicon · macOS 15+</span>
+    <h1>Take control of your Mac's <span class="grad">fans</span>.</h1>
+    <p class="lede">A polished, open-source fan controller for Apple Silicon. Smart cooling modes, live charts, a Liquid Glass menu-bar UI, and a privileged daemon that just works.</p>
+    <div class="cta-row">
+      <a class="cta" href="#install">Install with Homebrew</a>
+      <a class="cta secondary" href="https://github.com/Juanipis/fanctl">View on GitHub</a>
+    </div>
+    <div class="install" id="install">
+      <span class="prompt">$ </span>brew install --cask Juanipis/tap/fanctl
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What it does</h2>
+    <p class="subtitle">Five thoughtful cooling modes plus full manual control, all from your menu bar.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="icon">⚙️</div>
+        <h3>Smart modes</h3>
+        <p>Auto, Silent, Cool, Performance, Custom, Manual. Each runs a temperature → RPM curve evaluated 2× per second by a privileged background daemon.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📈</div>
+        <h3>Live charts</h3>
+        <p>RPM and temperature sparklines update in real time. History persists across restarts. Hottest sensor is always one glance away.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🎚</div>
+        <h3>Custom curves</h3>
+        <p>Drag points on a chart to define your own curve. Pick any SMC sensor as the driver — CPU, GPU, memory, ambient, whatever.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🛡️</div>
+        <h3>Watchdog</h3>
+        <p>Dead-man heartbeat plus 95 °C thermal panic. The helper falls back to macOS auto if anything goes wrong. You can never get stuck.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🔄</div>
+        <h3>Auto-updates</h3>
+        <p>Built-in Sparkle: signed, daily check, one-click apply. Or update via Homebrew. Or manually, your choice.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🆓</div>
+        <h3>Free &amp; open</h3>
+        <p>MIT-licensed Swift + IOKit. No third-party kernel extensions, no telemetry, no subscriptions. Read the source, file a bug, send a PR.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modes">
+  <div class="wrap">
+    <h2>Modes</h2>
+    <p class="subtitle">Each curve maps the hottest sensor (or one you pick) to fan RPM as a fraction of the fan's range.</p>
+    <div class="modes">
+      <div class="mode">
+        <div class="mode-name">⚡ Auto</div>
+        <div class="mode-desc">macOS owns the fans. Default. Safe.</div>
+      </div>
+      <div class="mode">
+        <div class="mode-name">🌙 Silent</div>
+        <div class="mode-curve">50°C→0% · 75°C→50% · 90°C→100%</div>
+        <div class="mode-desc">Quietest first. Only ramps when really hot.</div>
+      </div>
+      <div class="mode">
+        <div class="mode-name">❄️ Cool</div>
+        <div class="mode-curve">40°C→0% · 60°C→50% · 75°C→100%</div>
+        <div class="mode-desc">Keeps the chassis cold. Fan starts earlier.</div>
+      </div>
+      <div class="mode">
+        <div class="mode-name">⚡ Performance</div>
+        <div class="mode-curve">35°C→50% · 50°C→100%</div>
+        <div class="mode-desc">Aggressive cooling for sustained load.</div>
+      </div>
+      <div class="mode">
+        <div class="mode-name">✏️ Custom</div>
+        <div class="mode-curve">your curve · your sensor</div>
+        <div class="mode-desc">Edit in Preferences. Persists across reboots.</div>
+      </div>
+      <div class="mode">
+        <div class="mode-name">🎚 Manual</div>
+        <div class="mode-desc">Drag the slider. Min / Mid / Max presets too.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Architecture</h2>
+    <p class="subtitle">Sandboxed UI, privileged helper, deliberate trust boundary.</p>
+    <div class="arch">┌──────────────────────────────────────────┐
+│ FanCtl.app (SwiftUI · MenuBarExtra)      │
+│   - Liquid Glass popover                 │
+│   - Sparkline (Charts framework)         │
+│   - Mode picker, slider, temps           │
+│   - Custom curve editor                  │
+└────────────┬─────────────────────────────┘
+             │ NSXPCConnection
+             ▼
+┌──────────────────────────────────────────┐
+│ com.juanipis.FanCtl.Helper               │
+│   (LaunchDaemon, root, SMAppService)     │
+│   - Curve evaluator (2 Hz, EMA-smoothed) │
+│   - Hysteresis + rate limit              │
+│   - Watchdog: dead-man + thermal panic   │
+└────────────┬─────────────────────────────┘
+             │ IOConnectCallStructMethod
+             ▼
+┌──────────────────────────────────────────┐
+│ AppleSMCKeysEndpoint  (IOKit)            │
+└──────────────────────────────────────────┘</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Install</h2>
+    <p class="subtitle">Three options. Pick whichever you like.</p>
+    <h3 style="margin-top:24px;font-size:16px;">Homebrew</h3>
+    <pre>brew install --cask Juanipis/tap/fanctl</pre>
+    <h3 style="margin-top:24px;font-size:16px;">curl</h3>
+    <pre>curl -fsSL https://raw.githubusercontent.com/Juanipis/fanctl/main/scripts/install.sh | bash</pre>
+    <h3 style="margin-top:24px;font-size:16px;">Manual</h3>
+    <p style="color:var(--muted)">Grab <a href="https://github.com/Juanipis/fanctl/releases/latest">the latest release</a>, unzip, drop into <code>/Applications</code>, run <code>xattr -dr com.apple.quarantine /Applications/FanCtl.app</code>, open it.</p>
+    <h3 style="margin-top:24px;font-size:16px;">First run</h3>
+    <ol style="color:var(--muted);font-size:14px;">
+      <li>Click the fan icon in your menu bar.</li>
+      <li>Click <strong>Install Helper</strong>. macOS will redirect you to <em>System Settings → General → Login Items &amp; Extensions → Background</em>.</li>
+      <li>Toggle <strong>FanCtl</strong> ON. Click <strong>Retry</strong>. The hero card lights up.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap row">
+    <div>Made by <a href="https://github.com/Juanipis">Juan Pablo Díaz Correa</a> · MIT-licensed</div>
+    <div>
+      <a href="https://github.com/Juanipis/fanctl">Source</a> ·
+      <a href="https://github.com/Juanipis/fanctl/issues">Issues</a> ·
+      <a href="appcast.xml">Appcast</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

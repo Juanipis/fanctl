@@ -119,7 +119,7 @@ struct Header: View {
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
             Spacer()
             if let mode = client.snapshot?.activeMode {
-                Label(mode.displayName, systemImage: mode.symbolName)
+                Label(L10n.modeName(mode.rawValue), systemImage: mode.symbolName)
                     .labelStyle(.titleAndIcon)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
                     .padding(.horizontal, 8).padding(.vertical, 3)
@@ -142,7 +142,7 @@ struct Footer: View {
             Button {
                 client.setMode(.auto)
             } label: {
-                Label("Auto", systemImage: "wand.and.stars")
+                Label { L10n.text(L10n.footerAuto) } icon: { Image(systemName: "wand.and.stars") }
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
@@ -158,7 +158,7 @@ struct Footer: View {
             .popover(isPresented: $showAbout, arrowEdge: .bottom) {
                 AboutCard().padding(16).frame(width: 260)
             }
-            Button("Quit") { NSApp.terminate(nil) }
+            Button { NSApp.terminate(nil) } label: { L10n.text(L10n.footerQuit) }
                 .buttonStyle(.borderless)
                 .controlSize(.small)
         }
@@ -193,7 +193,7 @@ struct AboutCard: View {
                 }
             }
 
-            Text("Native macOS fan controller for Apple Silicon.")
+            L10n.text(L10n.aboutTagline)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -201,7 +201,7 @@ struct AboutCard: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Created by").font(.caption2).foregroundStyle(.secondary)
+                L10n.text(L10n.aboutCreatedBy).font(.caption2).foregroundStyle(.secondary)
                 Link(destination: Self.authorURL) {
                     HStack(spacing: 4) {
                         Text("Juan Pablo Díaz Correa")
@@ -215,7 +215,7 @@ struct AboutCard: View {
             Link(destination: Self.repoURL) {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left.forwardslash.chevron.right")
-                    Text("Source on GitHub")
+                    L10n.text(L10n.aboutSource)
                     Spacer()
                     Image(systemName: "arrow.up.forward.app").font(.system(size: 9))
                 }
@@ -231,7 +231,7 @@ struct AboutCard: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "slider.horizontal.below.rectangle")
-                    Text("Preferences…")
+                    L10n.text(L10n.aboutPrefs)
                     Spacer()
                 }
                 .font(.caption)
@@ -245,7 +245,7 @@ struct AboutCard: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.down.circle")
-                    Text(updater.canCheck ? "Check for Updates…" : "Checking…")
+                    L10n.text(updater.canCheck ? L10n.aboutUpdateCheck : L10n.aboutUpdateChecking)
                     Spacer()
                 }
                 .font(.caption)
@@ -255,7 +255,7 @@ struct AboutCard: View {
             .buttonStyle(.plain)
             .disabled(!updater.canCheck)
 
-            Text("MIT-licensed. Auto-updates via Sparkle.")
+            L10n.text(L10n.aboutLicense)
                 .font(.caption2).foregroundStyle(.tertiary)
         }
     }
@@ -284,7 +284,7 @@ struct Hero: View {
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundStyle(tempTint(snapshot.hottestC))
                         .monospacedDigit()
-                    Text("hottest")
+                    L10n.text(L10n.heroHottest)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -295,9 +295,9 @@ struct Hero: View {
 
             if let fan {
                 HStack(spacing: 8) {
-                    InlineStat(label: "target", value: "\(Int(fan.target))")
-                    InlineStat(label: "min",    value: "\(Int(fan.min))")
-                    InlineStat(label: "max",    value: "\(Int(fan.max))")
+                    InlineStat(label: L10n.string(L10n.heroTarget), value: "\(Int(fan.target))")
+                    InlineStat(label: L10n.string(L10n.heroMin),    value: "\(Int(fan.min))")
+                    InlineStat(label: L10n.string(L10n.heroMax),    value: "\(Int(fan.max))")
                 }
             }
         }
@@ -387,7 +387,7 @@ struct ModePill: View {
             VStack(spacing: 2) {
                 Image(systemName: mode.symbolName)
                     .font(.system(size: 12, weight: .semibold))
-                Text(mode.displayName)
+                Text(L10n.modeName(mode.rawValue))
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
             }
             .frame(maxWidth: .infinity)
@@ -402,15 +402,16 @@ struct ModePill: View {
         .buttonStyle(.plain)
         .contentShape(.rect)
         .help(tooltipText)
-        .accessibilityLabel("\(mode.displayName) mode")
+        .accessibilityLabel("\(L10n.modeName(mode.rawValue)) mode")
         .accessibilityHint(tooltipText)
     }
 
     private var tooltipText: String {
+        let summary = L10n.modeSummary(mode.rawValue)
         if let curve = mode.curveSummary {
-            return "\(mode.summary)\n\n\(curve)"
+            return "\(summary)\n\n\(curve)"
         }
-        return mode.summary
+        return summary
     }
 }
 
@@ -483,7 +484,7 @@ struct TempsRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Temperatures")
+                L10n.text(L10n.tempsTitle)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -561,10 +562,10 @@ struct OutdatedHelperBanner: View {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
-                Text("Helper is out of date")
+                L10n.text(L10n.outdatedTitle)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
             }
-            Text("The background daemon was launched by a previous version of FanCtl and doesn't recognise this feature yet. Restart it once and you're set.")
+            L10n.text(L10n.outdatedBody)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -575,7 +576,8 @@ struct OutdatedHelperBanner: View {
                     client.clearOutOfDateFlag()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { client.refresh() }
                 } label: {
-                    Label("Restart helper", systemImage: "arrow.triangle.2.circlepath")
+                    Label { L10n.text(L10n.outdatedRestart) }
+                          icon: { Image(systemName: "arrow.triangle.2.circlepath") }
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
@@ -588,8 +590,11 @@ struct OutdatedHelperBanner: View {
                     pasteboardCopied = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) { pasteboardCopied = false }
                 } label: {
-                    Label(pasteboardCopied ? "Copied" : "Copy terminal command",
-                          systemImage: pasteboardCopied ? "checkmark" : "terminal")
+                    Label {
+                        L10n.text(pasteboardCopied ? L10n.outdatedCopied : L10n.outdatedCopy)
+                    } icon: {
+                        Image(systemName: pasteboardCopied ? "checkmark" : "terminal")
+                    }
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
@@ -611,23 +616,24 @@ struct NotInstalledView: View {
     @EnvironmentObject var client: HelperClient
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Helper daemon is not running.")
+            L10n.text(L10n.installTitle)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-            Text("FanCtl needs a privileged background helper to talk to the SMC. Click below — macOS will ask you to approve it in System Settings → Login Items & Extensions.")
+            L10n.text(L10n.installBody)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Button {
                     installer.register()
                     client.reconnect()
                 } label: {
-                    Label("Install Helper", systemImage: "lock.shield")
+                    Label { L10n.text(L10n.installButton) } icon: { Image(systemName: "lock.shield") }
                 }
                 .buttonStyle(.borderedProminent)
                 Button {
                     client.reconnect()
                 } label: {
-                    Label("Retry", systemImage: "arrow.clockwise")
+                    Label { L10n.text(L10n.installRetry) } icon: { Image(systemName: "arrow.clockwise") }
                 }
                 .buttonStyle(.bordered)
             }

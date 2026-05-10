@@ -8,12 +8,16 @@ private let log = Logger(subsystem: "com.juanipis.FanCtl", category: "HelperClie
 /// XPC reply blocks fire on `NSXPCConnection`'s internal queue, so we hop
 /// to main with `DispatchQueue.main.async` before mutating @Published state.
 /// `connection`, `pollTimer`, `heartbeatTimer` are touched from main only.
-/// One sample retained for the live sparkline.
-struct HistorySample: Identifiable, Hashable {
-    let id = UUID()
+/// One sample retained for the live sparkline. Codable so the ring buffer
+/// can be persisted across launches — the chart shouldn't be blank every
+/// time the user reopens the popover.
+struct HistorySample: Identifiable, Hashable, Codable {
+    var id = UUID()
     let timestamp: Date
     let rpm: Double
     let hottestC: Double
+
+    private enum CodingKeys: String, CodingKey { case timestamp, rpm, hottestC }
 }
 
 final class HelperClient: ObservableObject, @unchecked Sendable {
@@ -25,15 +29,35 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
     /// knows about — almost always means launchd is still running the
     /// previous helper binary and needs to be kicked.
     @Published private(set) var helperOutOfDate: Bool = false
-    /// 60-sample ring buffer (~1 minute at 1 Hz polling).
+    /// 60-sample ring buffer (~1 minute at 1 Hz polling), persisted to
+    /// UserDefaults so the sparkline survives a quit/relaunch.
     @Published private(set) var history: [HistorySample] = []
     private let historyCap = 60
+    private let historyKey = "com.juanipis.FanCtl.history"
+    /// Drop persisted samples older than this — no point restoring a chart
+    /// from yesterday.
+    private let historyMaxAge: TimeInterval = 5 * 60
 
     private var connection: NSXPCConnection?
     private var pollTimer: Timer?
     private var heartbeatTimer: Timer?
 
-    init() { connect() }
+    init() {
+        loadHistory()
+        connect()
+    }
+
+    private func loadHistory() {
+        guard let data = UserDefaults.standard.data(forKey: historyKey),
+              let samples = try? JSONDecoder().decode([HistorySample].self, from: data) else { return }
+        let cutoff = Date().addingTimeInterval(-historyMaxAge)
+        history = samples.filter { $0.timestamp >= cutoff }.suffix(historyCap)
+    }
+
+    private func persistHistory() {
+        guard let data = try? JSONEncoder().encode(history) else { return }
+        UserDefaults.standard.set(data, forKey: historyKey)
+    }
 
     /// Tear down any existing channel and open a fresh one. Call after
     /// the helper is (re)installed via SMAppService.
@@ -111,6 +135,7 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
                     if self.history.count > self.historyCap {
                         self.history.removeFirst(self.history.count - self.historyCap)
                     }
+                    self.persistHistory()
                     Notifications.shared.observe(snap)
                 } else if let err {
                     self.lastError = err

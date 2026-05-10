@@ -1,0 +1,67 @@
+/* Modes */
+"mode.auto"               = "Auto";
+"mode.silent"             = "Silent";
+"mode.cool"               = "Cool";
+"mode.performance"        = "Perf";
+"mode.custom"             = "Custom";
+"mode.manual"             = "Manual";
+
+"mode.summary.auto"        = "macOS owns the fans.";
+"mode.summary.silent"      = "Quietest first; ramps only when really hot.";
+"mode.summary.cool"        = "Keeps the chassis cool. Fan starts earlier.";
+"mode.summary.performance" = "Aggressive cooling for sustained load.";
+"mode.summary.custom"      = "Your own curve, edited from Preferences.";
+"mode.summary.manual"      = "You set the target RPM with the slider.";
+
+/* Header & footer */
+"app.title"               = "FanCtl";
+"footer.auto"             = "Auto";
+"footer.quit"             = "Quit";
+
+/* Hero */
+"hero.rpm"                = "rpm";
+"hero.hottest"            = "hottest";
+"hero.target"             = "target";
+"hero.min"                = "min";
+"hero.max"                = "max";
+
+/* Modes / manual */
+"manual.title"            = "Manual target";
+"manual.rpm.format"       = "%@ rpm";
+"manual.preset.min"       = "Min";
+"manual.preset.mid"       = "Mid";
+"manual.preset.max"       = "Max";
+
+/* Temps */
+"temps.title"             = "Temperatures";
+
+/* Not installed */
+"install.title"           = "Helper daemon is not running.";
+"install.body"            = "FanCtl needs a privileged background helper to talk to the SMC. Click below — macOS will ask you to approve it in System Settings → Login Items & Extensions.";
+"install.button"          = "Install Helper";
+"install.retry"           = "Retry";
+
+/* Outdated banner */
+"outdated.title"          = "Helper is out of date";
+"outdated.body"           = "The background daemon was launched by a previous version of FanCtl and doesn't recognise this feature yet. Restart it once and you're set.";
+"outdated.restart"        = "Restart helper";
+"outdated.copy"           = "Copy terminal command";
+"outdated.copied"         = "Copied";
+
+/* About card */
+"about.tagline"           = "Native macOS fan controller for Apple Silicon.";
+"about.created"           = "Created by";
+"about.source"            = "Source on GitHub";
+"about.preferences"       = "Preferences…";
+"about.update.check"      = "Check for Updates…";
+"about.update.checking"   = "Checking…";
+"about.license"           = "MIT-licensed. Auto-updates via Sparkle.";
+
+/* Preferences */
+"prefs.curve.title"       = "Custom curve";
+"prefs.curve.body"        = "Drag a point to reshape the curve. Each point maps a temperature to a fan target as a fraction of the fan's range.";
+"prefs.curve.reset"       = "Reset to default";
+"prefs.curve.save"        = "Save & activate";
+"prefs.sensor.title"      = "Driving sensor";
+"prefs.sensor.body"       = "Pick which temperature drives the curve. \"Hottest\" tracks whichever sensor is currently the highest — usually the safe default.";
+"prefs.sensor.hottest"    = "Hottest (auto)";

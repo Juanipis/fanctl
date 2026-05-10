@@ -1,0 +1,67 @@
+/* Modos */
+"mode.auto"               = "Auto";
+"mode.silent"             = "Silencio";
+"mode.cool"               = "Frío";
+"mode.performance"        = "Máx.";
+"mode.custom"             = "Custom";
+"mode.manual"             = "Manual";
+
+"mode.summary.auto"        = "macOS controla los ventiladores.";
+"mode.summary.silent"      = "Lo más silencioso posible; solo sube si hace falta.";
+"mode.summary.cool"        = "Mantiene el chasis fresco. Arranca antes el ventilador.";
+"mode.summary.performance" = "Ventilación agresiva para carga sostenida.";
+"mode.summary.custom"      = "Tu propia curva, editable en Preferencias.";
+"mode.summary.manual"      = "Tú eliges las RPM con el slider.";
+
+/* Cabecera y pie */
+"app.title"               = "FanCtl";
+"footer.auto"             = "Auto";
+"footer.quit"             = "Salir";
+
+/* Hero */
+"hero.rpm"                = "rpm";
+"hero.hottest"            = "más alta";
+"hero.target"             = "objetivo";
+"hero.min"                = "mín";
+"hero.max"                = "máx";
+
+/* Manual */
+"manual.title"            = "RPM manual";
+"manual.rpm.format"       = "%@ rpm";
+"manual.preset.min"       = "Mín";
+"manual.preset.mid"       = "Med";
+"manual.preset.max"       = "Máx";
+
+/* Temperaturas */
+"temps.title"             = "Temperaturas";
+
+/* Sin instalar */
+"install.title"           = "El daemon no está corriendo.";
+"install.body"            = "FanCtl necesita un helper privilegiado para hablar con el SMC. Haz click abajo — macOS te pedirá aprobarlo en Ajustes del Sistema → Items de inicio y extensiones.";
+"install.button"          = "Instalar helper";
+"install.retry"           = "Reintentar";
+
+/* Banner de helper desactualizado */
+"outdated.title"          = "Helper desactualizado";
+"outdated.body"           = "El daemon en background se lanzó con una versión anterior de FanCtl y no reconoce esta función aún. Reinícialo una vez y listo.";
+"outdated.restart"        = "Reiniciar helper";
+"outdated.copy"           = "Copiar comando de terminal";
+"outdated.copied"         = "Copiado";
+
+/* About */
+"about.tagline"           = "Control nativo de ventiladores en Apple Silicon.";
+"about.created"           = "Creado por";
+"about.source"            = "Código en GitHub";
+"about.preferences"       = "Preferencias…";
+"about.update.check"      = "Buscar actualizaciones…";
+"about.update.checking"   = "Buscando…";
+"about.license"           = "Licencia MIT. Actualizaciones automáticas vía Sparkle.";
+
+/* Preferencias */
+"prefs.curve.title"       = "Curva personalizada";
+"prefs.curve.body"        = "Arrastra un punto para reformar la curva. Cada punto mapea una temperatura a un objetivo de ventilador como fracción del rango.";
+"prefs.curve.reset"       = "Restaurar por defecto";
+"prefs.curve.save"        = "Guardar y activar";
+"prefs.sensor.title"      = "Sensor que rige";
+"prefs.sensor.body"       = "Elige qué temperatura rige la curva. \"Más alta\" sigue al sensor más caliente en cada momento — la opción más segura.";
+"prefs.sensor.hottest"    = "Más alta (auto)";
