@@ -1,0 +1,59 @@
+name: Bump Homebrew Cask
+
+# Triggered by the semantic-release commit + tag push that the Release
+# workflow makes. We listen to the new tag, derive the version, and run
+# scripts/bump-cask.sh against the Juanipis/homebrew-tap repo.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to bump (without the leading v)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    name: bump cask
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure git auth for tap repo
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN is not set."
+            echo "Add a fine-grained PAT with 'Contents: write' on Juanipis/homebrew-tap"
+            echo "as a repository secret named HOMEBREW_TAP_TOKEN."
+            exit 1
+          fi
+          git config --global \
+            url."https://x-access-token:$HOMEBREW_TAP_TOKEN@github.com/".insteadOf \
+            "https://github.com/"
+
+      - name: Wait for release assets to land
+        # The tag push fires before semantic-release finishes uploading the
+        # zip + .sha256 — give it a moment.
+        run: sleep 30
+
+      - name: Bump cask
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: bash scripts/bump-cask.sh

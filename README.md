@@ -38,17 +38,27 @@ The helper polls the hottest temperature every 2 s, smooths it with an EMA, and 
 
 ## Install
 
-### One-liner (recommended)
+### Homebrew (recommended)
+
+```bash
+brew install --cask Juanipis/tap/fanctl
+```
+
+That installs `FanCtl.app` into `/Applications`, clears the Gatekeeper quarantine flag (the build is ad-hoc signed, not notarized), and prints the post-install caveats. To upgrade later:
+
+```bash
+brew update && brew upgrade --cask fanctl
+```
+
+### Curl one-liner
+
+If you don't have Homebrew:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Juanipis/fanctl/main/scripts/install.sh | bash
 ```
 
-That script:
-1. Downloads the latest `FanCtl.app.zip` from GitHub Releases.
-2. Verifies its `sha256` against the `.sha256` sidecar.
-3. Drops `FanCtl.app` into `/Applications`, removes the quarantine flag (the build is ad-hoc signed, not notarized).
-4. Opens the app. The fan icon appears in your menu bar.
+That script downloads the latest `FanCtl.app.zip` from GitHub Releases, verifies its `sha256` against the published sidecar, drops the app into `/Applications`, removes the quarantine flag, and opens it.
 
 ### Manual
 
@@ -99,6 +109,14 @@ The selected mode is **persisted** — if you reboot, the helper restarts and re
 If anything ever goes wrong (app crash, helper hang, machine over-heats), the helper falls back to **Auto** within seconds and macOS regains control. You can never leave the machine stuck in manual.
 
 ## Uninstall
+
+If you installed via Homebrew:
+
+```bash
+brew uninstall --cask fanctl
+```
+
+If you used the curl installer or built from source:
 
 ```bash
 git clone https://github.com/Juanipis/fanctl.git    # if you don't have it
