@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/Juanipis/fanctl/compare/v1.6.0...v1.7.0) (2026-05-10)
+
+### Features
+
+* **app:** detect outdated helper and offer one-click restart ([ed22eb8](https://github.com/Juanipis/fanctl/commit/ed22eb8fa652fc73d729f9ed6c74b0a0156f9758))
+
 ## [1.6.0](https://github.com/Juanipis/fanctl/compare/v1.5.1...v1.6.0) (2026-05-10)
 
 ### Features
