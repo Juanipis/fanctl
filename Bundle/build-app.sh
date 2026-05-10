@@ -40,12 +40,32 @@ echo "==> assembling $APP"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 mkdir -p "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/Frameworks"
 mkdir -p "$APP/Contents/Library/LaunchDaemons"
 
 cp "$ROOT/Bundle/AppInfo.plist"      "$APP/Contents/Info.plist"
 cp "$BIN_DIR/FanCtlApp"              "$APP/Contents/MacOS/FanCtlApp"
 cp "$BIN_DIR/FanCtlHelper"           "$APP/Contents/MacOS/$HELPER_BUNDLE_NAME"
 cp "$ROOT/Bundle/HelperLaunchd.plist" "$APP/Contents/Library/LaunchDaemons/$HELPER_BUNDLE_NAME.plist"
+
+# Sparkle ships as a versioned .framework with embedded XPC services
+# (Autoupdate.app, downloader, installer). The app's @rpath points to
+# Contents/Frameworks, so we copy the whole thing there. -R preserves
+# the version symlinks Sparkle relies on; codesign then re-seals it
+# under the parent app's signature in the final pass.
+SPARKLE_FW="$ROOT/.build/arm64-apple-macosx/$( [ "$CONFIG" = "release" ] && echo "release" || echo "debug" )/Sparkle.framework"
+if [ -d "$SPARKLE_FW" ]; then
+    cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
+else
+    echo "❌ Sparkle.framework not found at $SPARKLE_FW"
+    exit 1
+fi
+
+# SwiftPM builds the executable with @executable_path rpaths suitable for
+# `swift run`, not for an .app bundle. Append the canonical bundle rpath
+# so dyld finds Sparkle inside Contents/Frameworks at runtime.
+install_name_tool -add_rpath "@executable_path/../Frameworks" \
+    "$APP/Contents/MacOS/FanCtlApp" 2>/dev/null || true
 
 # App icon. Re-render from source if the .icns is missing — keeps CI
 # self-contained without checking a binary blob into the repo (we keep
@@ -61,15 +81,34 @@ cp "$ROOT/Bundle/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER"        "$APP/Contents/Info.plist"
 
 echo "==> signing ($SIGN_IDENTITY)"
+# Sparkle's nested bundles (Autoupdate.app + Downloader/Installer XPCs)
+# must be signed before the framework, and the framework before the app.
+# We deliberately drop --options=runtime: hardened runtime requires a
+# proper Developer ID + entitlements chain, which doesn't apply to an
+# ad-hoc redistribution. Signing without that flag keeps Sparkle's
+# pre-built binaries loadable by an ad-hoc-signed parent.
+SPARKLE_VER="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+for inner in \
+    "$SPARKLE_VER/Updater.app/Contents/MacOS/Autoupdate" \
+    "$SPARKLE_VER/Updater.app" \
+    "$SPARKLE_VER/XPCServices/Downloader.xpc/Contents/MacOS/Downloader" \
+    "$SPARKLE_VER/XPCServices/Downloader.xpc" \
+    "$SPARKLE_VER/XPCServices/Installer.xpc/Contents/MacOS/Installer" \
+    "$SPARKLE_VER/XPCServices/Installer.xpc"; do
+    if [ -e "$inner" ]; then
+        codesign --force --sign "$SIGN_IDENTITY" --timestamp=none "$inner" 2>/dev/null || true
+    fi
+done
+codesign --force --sign "$SIGN_IDENTITY" --timestamp=none \
+    "$APP/Contents/Frameworks/Sparkle.framework"
+
 codesign --force --sign "$SIGN_IDENTITY" \
     --identifier "com.juanipis.FanCtl.Helper" \
-    --options runtime \
     --timestamp=none \
     "$APP/Contents/MacOS/$HELPER_BUNDLE_NAME"
 
 codesign --force --sign "$SIGN_IDENTITY" \
     --identifier "com.juanipis.FanCtl" \
-    --options runtime \
     --timestamp=none \
     "$APP"
 
