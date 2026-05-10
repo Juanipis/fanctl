@@ -20,12 +20,23 @@ struct FanCtlApp: App {
                 .environmentObject(installer)
                 .environmentObject(updater)
                 .frame(width: 360)
-                .onAppear { client.startPolling() }
+                .onAppear {
+                    client.startPolling()
+                    Notifications.shared.requestAuthorizationIfNeeded()
+                }
                 .onDisappear { client.stopPolling() }
         } label: {
             MenuLabel(client: client)
         }
         .menuBarExtraStyle(.window)
+
+        // Free-floating Preferences window. Open with `cmd+,` from any focused
+        // FanCtl window or programmatically via openWindow(id: "preferences").
+        Window("FanCtl Preferences", id: "preferences") {
+            PreferencesView()
+                .environmentObject(client)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
@@ -156,6 +167,7 @@ struct Footer: View {
 
 struct AboutCard: View {
     @EnvironmentObject var updater: Updater
+    @Environment(\.openWindow) private var openWindow
     private static let version: String =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
     private static let build: String =
@@ -203,6 +215,21 @@ struct AboutCard: View {
                     Text("Source on GitHub")
                     Spacer()
                     Image(systemName: "arrow.up.forward.app").font(.system(size: 9))
+                }
+                .font(.caption)
+                .padding(.vertical, 6).padding(.horizontal, 10)
+                .background(.thinMaterial, in: .rect(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                openWindow(id: "preferences")
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "slider.horizontal.below.rectangle")
+                    Text("Preferences…")
+                    Spacer()
                 }
                 .font(.caption)
                 .padding(.vertical, 6).padding(.horizontal, 10)
@@ -371,6 +398,16 @@ struct ModePill: View {
         }
         .buttonStyle(.plain)
         .contentShape(.rect)
+        .help(tooltipText)
+        .accessibilityLabel("\(mode.displayName) mode")
+        .accessibilityHint(tooltipText)
+    }
+
+    private var tooltipText: String {
+        if let curve = mode.curveSummary {
+            return "\(mode.summary)\n\n\(curve)"
+        }
+        return mode.summary
     }
 }
 
@@ -581,6 +618,7 @@ func modeTint(_ mode: ControlMode) -> Color {
     case .silent:      return .indigo
     case .cool:        return .cyan
     case .performance: return .red
+    case .custom:      return .pink
     case .manual:      return .orange
     }
 }

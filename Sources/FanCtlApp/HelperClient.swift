@@ -107,6 +107,7 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
                     if self.history.count > self.historyCap {
                         self.history.removeFirst(self.history.count - self.historyCap)
                     }
+                    Notifications.shared.observe(snap)
                 } else if let err {
                     self.lastError = err
                 }
@@ -143,6 +144,25 @@ final class HelperClient: ObservableObject, @unchecked Sendable {
 
     func setAllAuto() {
         proxy()?.setAllAuto { [weak self] err in
+            DispatchQueue.main.async {
+                if let err { self?.lastError = err }
+                self?.refresh()
+            }
+        }
+    }
+
+    func setCustomCurve(_ curve: FanCurve) {
+        guard let data = try? JSONEncoder().encode(curve) else { return }
+        proxy()?.setCustomCurve(curveData: data) { [weak self] err in
+            DispatchQueue.main.async {
+                if let err { self?.lastError = err }
+                self?.refresh()
+            }
+        }
+    }
+
+    func setSensorKey(_ key: String?) {
+        proxy()?.setSensorKey(key: key) { [weak self] err in
             DispatchQueue.main.async {
                 if let err { self?.lastError = err }
                 self?.refresh()

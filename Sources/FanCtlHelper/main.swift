@@ -2,6 +2,9 @@ import Foundation
 import FanCtlProtocol
 import SMCKit
 import os.log
+// Notifications are surfaced by the app, not the helper: launch daemons
+// can't reliably post to NotificationCenter under modern macOS, but the
+// app sees every snapshot and can detect threshold crossings on its side.
 
 let log = Logger(subsystem: "com.juanipis.FanCtl", category: "Helper")
 let buildVersion = "0.2.0"
@@ -35,8 +38,8 @@ func onSMC<T>(_ block: () throws -> T) throws -> T {
 // MARK: - Mode controller (the "smart" part)
 
 /// Owns the active `ControlMode` and runs the curve evaluator. The helper
-/// decides target RPMs every 2s based on the hottest temperature and the
-/// curve attached to the current mode.
+/// decides target RPMs every 2s based on the selected sensor (or hottest)
+/// and the curve attached to the current mode.
 final class ModeController: @unchecked Sendable {
 
     static let shared = ModeController()
@@ -45,42 +48,74 @@ final class ModeController: @unchecked Sendable {
     private var current: ControlMode
     private var timer: DispatchSourceTimer?
     private let prefsKey = "com.juanipis.FanCtl.activeMode"
-    /// EMA-smoothed hottest temperature. Avoids jittery RPM swings when
-    /// thermal sensors flicker by 1–2°C.
-    private var smoothedHottestC: Double = 0
+    private let customCurveKey = "com.juanipis.FanCtl.customCurve"
+    private let sensorKeyKey = "com.juanipis.FanCtl.sensorKey"
+    private var customCurve: FanCurve
+    /// nil = use hottest. Otherwise an SMC key like "Tp0X".
+    private var sensorKey: String?
+    /// EMA-smoothed driver temp. Avoids jittery RPM swings when sensors
+    /// flicker by 1–2°C.
+    private var smoothedC: Double = 0
     private let smoothingAlpha: Double = 0.3
 
     private init() {
-        // Persisted via CFPreferences in the helper's preferences domain.
         if let raw = UserDefaults.standard.string(forKey: prefsKey),
            let mode = ControlMode(rawValue: raw) {
             current = mode
         } else {
             current = .auto
         }
-        log.info("ModeController booted with \(self.current.rawValue, privacy: .public)")
+        if let data = UserDefaults.standard.data(forKey: customCurveKey),
+           let decoded = try? JSONDecoder().decode(FanCurve.self, from: data) {
+            customCurve = decoded
+        } else {
+            customCurve = .defaultCustom
+        }
+        let stored = UserDefaults.standard.string(forKey: sensorKeyKey)
+        sensorKey = (stored?.isEmpty == false) ? stored : nil
+        log.info("ModeController booted with mode=\(self.current.rawValue, privacy: .public) sensor=\(self.sensorKey ?? "<hottest>", privacy: .public)")
     }
 
-    var mode: ControlMode {
-        queue.sync { current }
-    }
+    var mode: ControlMode { queue.sync { current } }
+    var currentCustomCurve: FanCurve { queue.sync { customCurve } }
+    var currentSensorKey: String? { queue.sync { sensorKey } }
 
     func setMode(_ new: ControlMode) throws {
         queue.sync {
             current = new
             UserDefaults.standard.set(new.rawValue, forKey: prefsKey)
         }
-        // Apply the mode change immediately rather than waiting for the
-        // next tick — feels snappy and avoids surprise lag.
         if new == .auto {
             try onSMC { try fans.setAllAuto() }
         } else if new == .manual {
-            // No-op: manual mode just stops the curve loop. The app will
-            // follow up with `setManual(fan:rpm:)`.
+            // No-op: manual stops the loop; the app will send a target.
         } else {
             applyCurveTick()
         }
         log.notice("setMode(\(new.rawValue, privacy: .public))")
+    }
+
+    func setCustomCurve(_ curve: FanCurve) {
+        guard !curve.points.isEmpty else { return }
+        queue.sync {
+            customCurve = curve
+            if let data = try? JSONEncoder().encode(curve) {
+                UserDefaults.standard.set(data, forKey: customCurveKey)
+            }
+        }
+        // Apply immediately if we're already in custom mode.
+        if mode == .custom { applyCurveTick() }
+        log.notice("setCustomCurve(\(curve.points.count) points)")
+    }
+
+    func setSensorKey(_ key: String?) {
+        queue.sync {
+            sensorKey = (key?.isEmpty == false) ? key : nil
+            UserDefaults.standard.set(sensorKey ?? "", forKey: sensorKeyKey)
+            smoothedC = 0  // reset EMA — new sensor, fresh history
+        }
+        if mode != .auto && mode != .manual { applyCurveTick() }
+        log.notice("setSensorKey(\(key ?? "<hottest>", privacy: .public))")
     }
 
     func start() {
@@ -91,23 +126,34 @@ final class ModeController: @unchecked Sendable {
         t.resume()
     }
 
-    /// Reads hottest temp, evaluates curve, writes target. Called on the
-    /// mode queue (which is fine — actual SMC work jumps to `smcQueue`).
+    /// Resolves the current curve (built-in or custom), reads the driver
+    /// temperature, applies EMA, and writes the per-fan targets.
     private func applyCurveTick() {
-        guard let curve = current.curve else { return }
+        let activeCurve: FanCurve?
+        switch current {
+        case .custom: activeCurve = customCurve
+        default:      activeCurve = current.curve
+        }
+        guard let curve = activeCurve else { return }
+
         do {
             let snap = try onSMC { () -> (Double, [FanController.Fan]) in
-                let temps = fans.discoverTemperatures()
-                let hottest = temps.first?.celsius ?? 0
+                let driverC: Double
+                if let key = self.sensorKey,
+                   let v = try? smc.read(SMCKey(key)),
+                   let c = v.asDouble {
+                    driverC = c
+                } else {
+                    driverC = fans.discoverTemperatures().first?.celsius ?? 0
+                }
                 let f = try fans.readAllFans()
-                return (hottest, f)
+                return (driverC, f)
             }
             let raw = snap.0
-            // First-sample bootstrap.
-            if smoothedHottestC == 0 { smoothedHottestC = raw }
-            smoothedHottestC = smoothingAlpha * raw + (1 - smoothingAlpha) * smoothedHottestC
+            if smoothedC == 0 { smoothedC = raw }
+            smoothedC = smoothingAlpha * raw + (1 - smoothingAlpha) * smoothedC
 
-            let frac = curve.evaluate(tempC: smoothedHottestC).clamped(to: 0...1)
+            let frac = curve.evaluate(tempC: smoothedC).clamped(to: 0...1)
             for fan in snap.1 {
                 let target = fan.min + frac * (fan.max - fan.min)
                 try? onSMC { try fans.setManual(fan.index, rpm: target) }
@@ -220,6 +266,8 @@ final class HelperService: NSObject, FanCtlHelperXPC {
     func snapshot(reply: @Sendable @escaping (Data?, String?) -> Void) {
         do {
             let mode = ModeController.shared.mode
+            let curve = ModeController.shared.currentCustomCurve
+            let sensor = ModeController.shared.currentSensorKey
             let snap: SystemSnapshot = try onSMC {
                 let fanStates = try fans.readAllFans().map { f in
                     FanState(
@@ -229,14 +277,34 @@ final class HelperService: NSObject, FanCtlHelperXPC {
                 }
                 let allTemps = fans.discoverTemperatures()
                 let hottest = allTemps.first?.celsius ?? 0
-                let temps = allTemps.prefix(8).map { TempState(key: $0.key.description, celsius: $0.celsius) }
-                return SystemSnapshot(fans: fanStates, temps: Array(temps),
-                                      hottestC: hottest, activeMode: mode)
+                let temps = allTemps.prefix(20).map {
+                    TempState(key: $0.key.description, celsius: $0.celsius)
+                }
+                return SystemSnapshot(
+                    fans: fanStates, temps: Array(temps),
+                    hottestC: hottest, activeMode: mode,
+                    customCurve: curve, sensorKey: sensor
+                )
             }
             reply(try JSONEncoder().encode(snap), nil)
         } catch {
             reply(nil, "\(error)")
         }
+    }
+
+    func setCustomCurve(curveData: Data, reply: @Sendable @escaping (String?) -> Void) {
+        do {
+            let curve = try JSONDecoder().decode(FanCurve.self, from: curveData)
+            ModeController.shared.setCustomCurve(curve)
+            reply(nil)
+        } catch {
+            reply("decode failed: \(error)")
+        }
+    }
+
+    func setSensorKey(key: String?, reply: @Sendable @escaping (String?) -> Void) {
+        ModeController.shared.setSensorKey(key)
+        reply(nil)
     }
 
     func setMode(modeId: String, reply: @Sendable @escaping (String?) -> Void) {

@@ -8,14 +8,15 @@ public let kHelperPlistName = "com.juanipis.FanCtl.Helper.plist"
 
 // MARK: - Control modes
 
-/// One of five fan control modes. Only `auto` and `manual` go straight to
-/// the SMC unchanged; the curve modes have the helper run a 2 Hz loop that
-/// maps the hottest temperature to a target RPM.
+/// One of six fan control modes. `auto` and `manual` go straight to the
+/// SMC unchanged; `silent`/`cool`/`performance` use built-in curves; and
+/// `custom` runs a user-defined curve set via `setCustomCurve`.
 public enum ControlMode: String, Codable, CaseIterable, Sendable {
     case auto         // F<n>md = 0; macOS owns the fans
-    case silent       // gentle curve: keep RPM low
-    case cool         // moderate curve: keep temps low
-    case performance  // aggressive curve: ramp early
+    case silent       // gentle built-in curve
+    case cool         // moderate built-in curve
+    case performance  // aggressive built-in curve
+    case custom       // user-defined curve persisted by helper
     case manual       // F<n>md = 1; app sends explicit target
 
     public var displayName: String {
@@ -24,6 +25,7 @@ public enum ControlMode: String, Codable, CaseIterable, Sendable {
         case .silent:      return "Silent"
         case .cool:        return "Cool"
         case .performance: return "Perf"
+        case .custom:      return "Custom"
         case .manual:      return "Manual"
         }
     }
@@ -34,17 +36,38 @@ public enum ControlMode: String, Codable, CaseIterable, Sendable {
         case .silent:      return "moon.zzz"
         case .cool:        return "snowflake"
         case .performance: return "bolt.fill"
+        case .custom:      return "scribble.variable"
         case .manual:      return "slider.horizontal.3"
         }
     }
 
-    /// Built-in curve definition for the curve modes. `auto` and `manual`
-    /// return `nil`. Curve points are `(temperatureC, rpmFraction 0..1)`,
-    /// ascending in temperature; the helper interpolates linearly between
-    /// breakpoints and clamps to `[0, 1]`.
+    /// One-line description for tooltips and accessibility hints.
+    public var summary: String {
+        switch self {
+        case .auto:        return "macOS owns the fans."
+        case .silent:      return "Quietest first; ramps only when really hot."
+        case .cool:        return "Keeps the chassis cool. Fan starts earlier."
+        case .performance: return "Aggressive cooling for sustained load."
+        case .custom:      return "Your own curve, edited from Preferences."
+        case .manual:      return "You set the target RPM with the slider."
+        }
+    }
+
+    /// Compact human-readable rendering of the curve for tooltip display.
+    /// Returns nil for `auto` and `manual` (no curve).
+    public var curveSummary: String? {
+        guard let c = curve else { return nil }
+        return c.points
+            .map { "\(Int($0.tempC))°C → \(Int($0.rpmFraction * 100))%" }
+            .joined(separator: " · ")
+    }
+
+    /// Built-in curve definition for the curve modes. `auto`, `manual`,
+    /// and `custom` return `nil` — `custom` resolves to whatever the user
+    /// stored in the helper's preferences.
     public var curve: FanCurve? {
         switch self {
-        case .auto, .manual:
+        case .auto, .manual, .custom:
             return nil
         case .silent:
             return FanCurve(points: [
@@ -65,6 +88,16 @@ public enum ControlMode: String, Codable, CaseIterable, Sendable {
             ])
         }
     }
+}
+
+extension FanCurve {
+    /// Default curve seeded into the `custom` mode the first time the user
+    /// opens Preferences. Mid-aggressive — sane starting point.
+    public static let defaultCustom = FanCurve(points: [
+        .init(tempC: 45, rpmFraction: 0.0),
+        .init(tempC: 65, rpmFraction: 0.5),
+        .init(tempC: 80, rpmFraction: 1.0),
+    ])
 }
 
 public struct FanCurve: Codable, Sendable, Hashable {
@@ -133,13 +166,25 @@ public struct SystemSnapshot: Codable, Sendable {
     public var temps: [TempState]
     public var hottestC: Double
     public var activeMode: ControlMode
+    public var customCurve: FanCurve?
+    public var sensorKey: String?    // nil = "hottest"; otherwise an SMC key like "Tp0X"
     public var timestamp: Date
 
-    public init(fans: [FanState], temps: [TempState], hottestC: Double, activeMode: ControlMode, timestamp: Date = Date()) {
+    public init(
+        fans: [FanState],
+        temps: [TempState],
+        hottestC: Double,
+        activeMode: ControlMode,
+        customCurve: FanCurve? = nil,
+        sensorKey: String? = nil,
+        timestamp: Date = Date()
+    ) {
         self.fans = fans
         self.temps = temps
         self.hottestC = hottestC
         self.activeMode = activeMode
+        self.customCurve = customCurve
+        self.sensorKey = sensorKey
         self.timestamp = timestamp
     }
 }
@@ -165,6 +210,15 @@ public struct SystemSnapshot: Codable, Sendable {
 
     func setAuto(fan: Int, reply: @Sendable @escaping (String?) -> Void)
     func setAllAuto(reply: @Sendable @escaping (String?) -> Void)
+
+    /// Replaces the user's custom curve. JSON-encoded `FanCurve`. Helper
+    /// persists it; selecting mode `.custom` then activates it. Sending
+    /// an empty/invalid curve is a no-op.
+    func setCustomCurve(curveData: Data, reply: @Sendable @escaping (String?) -> Void)
+
+    /// Selects which sensor drives the curve evaluator. Pass nil/empty to
+    /// fall back to "hottest", or an SMC key like "Tp0X". Persisted.
+    func setSensorKey(key: String?, reply: @Sendable @escaping (String?) -> Void)
 
     /// Heartbeat. The app pings every few seconds; if missed too long the
     /// helper forces every fan to AUTO regardless of selected mode.
