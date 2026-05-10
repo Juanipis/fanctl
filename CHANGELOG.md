@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/Juanipis/fanctl/compare/v1.0.0...v1.1.0) (2026-05-10)
+
+### Features
+
+* **app:** generate AppIcon.icns from code ([7206da4](https://github.com/Juanipis/fanctl/commit/7206da49eb1ae7bd19a4e6e8a1372186c90a1f0d))
+
 ## 1.0.0 (2026-05-09)
 
 ### Features
