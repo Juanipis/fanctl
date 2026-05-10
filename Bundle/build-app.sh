@@ -47,6 +47,15 @@ cp "$BIN_DIR/FanCtlApp"              "$APP/Contents/MacOS/FanCtlApp"
 cp "$BIN_DIR/FanCtlHelper"           "$APP/Contents/MacOS/$HELPER_BUNDLE_NAME"
 cp "$ROOT/Bundle/HelperLaunchd.plist" "$APP/Contents/Library/LaunchDaemons/$HELPER_BUNDLE_NAME.plist"
 
+# App icon. Re-render from source if the .icns is missing — keeps CI
+# self-contained without checking a binary blob into the repo (we keep
+# only the generator script).
+if [ ! -f "$ROOT/Bundle/AppIcon.icns" ]; then
+    echo "==> AppIcon.icns missing, regenerating"
+    bash "$ROOT/Bundle/make-icon.sh"
+fi
+cp "$ROOT/Bundle/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+
 # Stamp version + build into Info.plist.
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION"  "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER"        "$APP/Contents/Info.plist"
