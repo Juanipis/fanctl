@@ -38,21 +38,79 @@ The helper polls the hottest temperature every 2 s, smooths it with an EMA, and 
 
 ## Install
 
-### Pre-built (recommended)
+### One-liner (recommended)
 
-Grab the latest `FanCtl.app.zip` from the [releases page](https://github.com/Juanipis/fanctl/releases/latest), unzip, drag into `/Applications`, open it, click **Install Helper** in the menu-bar popover, and approve in System Settings → Login Items & Extensions → Background.
+```bash
+curl -fsSL https://raw.githubusercontent.com/Juanipis/fanctl/main/scripts/install.sh | bash
+```
+
+That script:
+1. Downloads the latest `FanCtl.app.zip` from GitHub Releases.
+2. Verifies its `sha256` against the `.sha256` sidecar.
+3. Drops `FanCtl.app` into `/Applications`, removes the quarantine flag (the build is ad-hoc signed, not notarized).
+4. Opens the app. The fan icon appears in your menu bar.
+
+### Manual
+
+1. Grab `FanCtl-X.Y.Z.zip` from the [latest release](https://github.com/Juanipis/fanctl/releases/latest).
+2. Unzip and move `FanCtl.app` to `/Applications`.
+3. Because it isn't notarized, run once:
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/FanCtl.app
+   ```
+4. Open it. A small fan icon appears in the menu bar.
 
 ### From source
 
 ```bash
 git clone https://github.com/Juanipis/fanctl.git
 cd fanctl
-swift test                          # run unit tests
-bash Bundle/build-app.sh release    # build + ad-hoc sign
-bash Bundle/install.sh release      # copy to /Applications and open
+swift test                          # unit tests
+bash Bundle/build-app.sh release    # builds + ad-hoc signs FanCtl.app
+bash Bundle/install.sh   release    # copies to /Applications, opens it
 ```
 
-Requirements: macOS 15+ and Xcode 16+ (with the Swift 6 toolchain).
+Requirements: macOS 15+, Xcode 16+ (Swift 6 toolchain).
+
+## First run
+
+The app needs a tiny privileged background helper to talk to the SMC, since
+fan writes require root. macOS makes you approve this once.
+
+1. Click the fan icon in your menu bar.
+2. Click **Install Helper**.
+3. macOS opens **System Settings → General → Login Items & Extensions**. Scroll to **Allow in the Background** and switch the **FanCtl** entry to **ON**.
+4. Click **Retry** in the popover. The hero card lights up with live RPM and a sparkline.
+
+You only do this once. The helper survives reboots and runs in the background even when the FanCtl app is closed — that way your selected mode keeps working.
+
+## Daily use
+
+Click the fan icon and pick a mode:
+
+- **Auto** — hands off, macOS owns the fans. Default and safe.
+- **Silent** — keeps the fan as quiet as possible. Best for normal browsing/coding.
+- **Cool** ❄️ — keeps the chassis cold. Spins up earlier than Apple would.
+- **Performance** ⚡ — aggressive cooling under load. Best for compiles, exports, gaming.
+- **Manual** — the slider appears. Drag wherever; presets for Min / Mid / Max underneath.
+
+The selected mode is **persisted** — if you reboot, the helper restarts and resumes the same mode automatically.
+
+If anything ever goes wrong (app crash, helper hang, machine over-heats), the helper falls back to **Auto** within seconds and macOS regains control. You can never leave the machine stuck in manual.
+
+## Uninstall
+
+```bash
+git clone https://github.com/Juanipis/fanctl.git    # if you don't have it
+cd fanctl
+bash Bundle/uninstall.sh
+```
+
+Or by hand:
+
+1. Quit FanCtl from the menu bar.
+2. System Settings → General → Login Items & Extensions → set **FanCtl** to **OFF**.
+3. `rm -rf /Applications/FanCtl.app`.
 
 ## Architecture
 
