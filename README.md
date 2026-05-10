@@ -142,7 +142,7 @@ Or by hand:
              │ NSXPCConnection
              ▼
 ┌──────────────────────────────────────────┐
-│ com.jpdiaz.FanCtl.Helper                 │
+│ com.juanipis.FanCtl.Helper                 │
 │  (LaunchDaemon, root, SMAppService)      │
 │  - Curve evaluator (2 Hz)                │
 │  - Watchdog: dead-man + thermal panic    │

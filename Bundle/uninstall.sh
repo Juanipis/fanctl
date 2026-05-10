@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-LABEL="com.jpdiaz.FanCtl.Helper"
+LABEL="com.juanipis.FanCtl.Helper"
 
 echo "==> setting all fans back to AUTO before uninstall"
 if pgrep -x FanCtlApp >/dev/null; then

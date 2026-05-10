@@ -3,12 +3,12 @@ import FanCtlProtocol
 import SMCKit
 import os.log
 
-let log = Logger(subsystem: "com.jpdiaz.FanCtl", category: "Helper")
+let log = Logger(subsystem: "com.juanipis.FanCtl", category: "Helper")
 let buildVersion = "0.2.0"
 
 // MARK: - SMC backend (single shared instance, serialised via a queue)
 
-let smcQueue = DispatchQueue(label: "com.jpdiaz.FanCtl.smc")
+let smcQueue = DispatchQueue(label: "com.juanipis.FanCtl.smc")
 let smc: SMC
 let fans: FanController
 do {
@@ -41,10 +41,10 @@ final class ModeController: @unchecked Sendable {
 
     static let shared = ModeController()
 
-    private let queue = DispatchQueue(label: "com.jpdiaz.FanCtl.mode")
+    private let queue = DispatchQueue(label: "com.juanipis.FanCtl.mode")
     private var current: ControlMode
     private var timer: DispatchSourceTimer?
-    private let prefsKey = "com.jpdiaz.FanCtl.activeMode"
+    private let prefsKey = "com.juanipis.FanCtl.activeMode"
     /// EMA-smoothed hottest temperature. Avoids jittery RPM swings when
     /// thermal sensors flicker by 1–2°C.
     private var smoothedHottestC: Double = 0
@@ -129,7 +129,7 @@ extension Comparable {
 final class Watchdog: @unchecked Sendable {
     static let shared = Watchdog()
 
-    private let queue = DispatchQueue(label: "com.jpdiaz.FanCtl.watchdog")
+    private let queue = DispatchQueue(label: "com.juanipis.FanCtl.watchdog")
     private var lastHeartbeat: Date = .distantFuture
     private var armed: Bool = false
     private var timer: DispatchSourceTimer?
@@ -192,7 +192,7 @@ final class Watchdog: @unchecked Sendable {
 // MARK: - Rate limiter (≤ 2 writes per second per fan, manual mode only)
 
 final class RateLimiter: @unchecked Sendable {
-    private let queue = DispatchQueue(label: "com.jpdiaz.FanCtl.ratelimit")
+    private let queue = DispatchQueue(label: "com.juanipis.FanCtl.ratelimit")
     private var lastWriteByFan: [Int: Date] = [:]
     private let minIntervalSec: TimeInterval = 0.4
 

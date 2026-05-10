@@ -4,8 +4,8 @@
 # Layout produced:
 #   FanCtl.app/Contents/Info.plist
 #   FanCtl.app/Contents/MacOS/FanCtlApp
-#   FanCtl.app/Contents/MacOS/com.jpdiaz.FanCtl.Helper
-#   FanCtl.app/Contents/Library/LaunchDaemons/com.jpdiaz.FanCtl.Helper.plist
+#   FanCtl.app/Contents/MacOS/com.juanipis.FanCtl.Helper
+#   FanCtl.app/Contents/Library/LaunchDaemons/com.juanipis.FanCtl.Helper.plist
 #
 # Usage:
 #   Bundle/build-app.sh [release|debug]
@@ -25,7 +25,7 @@ SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN_DIR="$ROOT/.build/$( [ "$CONFIG" = "release" ] && echo "release" || echo "debug" )"
 APP="$ROOT/.build/FanCtl.app"
-HELPER_BUNDLE_NAME="com.jpdiaz.FanCtl.Helper"
+HELPER_BUNDLE_NAME="com.juanipis.FanCtl.Helper"
 
 echo "==> swift build ($CONFIG, version $VERSION build $BUILD_NUMBER)"
 if [ "$CONFIG" = "release" ]; then
@@ -62,13 +62,13 @@ cp "$ROOT/Bundle/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
 echo "==> signing ($SIGN_IDENTITY)"
 codesign --force --sign "$SIGN_IDENTITY" \
-    --identifier "com.jpdiaz.FanCtl.Helper" \
+    --identifier "com.juanipis.FanCtl.Helper" \
     --options runtime \
     --timestamp=none \
     "$APP/Contents/MacOS/$HELPER_BUNDLE_NAME"
 
 codesign --force --sign "$SIGN_IDENTITY" \
-    --identifier "com.jpdiaz.FanCtl" \
+    --identifier "com.juanipis.FanCtl" \
     --options runtime \
     --timestamp=none \
     "$APP"

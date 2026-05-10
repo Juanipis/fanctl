@@ -1,10 +1,10 @@
 import Foundation
 
 /// Mach service name the helper registers and the app connects to.
-public let kHelperMachServiceName = "com.jpdiaz.FanCtl.Helper"
+public let kHelperMachServiceName = "com.juanipis.FanCtl.Helper"
 
 /// LaunchDaemon plist file (lives at Contents/Library/LaunchDaemons/<name>).
-public let kHelperPlistName = "com.jpdiaz.FanCtl.Helper.plist"
+public let kHelperPlistName = "com.juanipis.FanCtl.Helper.plist"
 
 // MARK: - Control modes
 

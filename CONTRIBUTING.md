@@ -28,7 +28,7 @@ swift run fanctl-cli status             # poke SMC reads
 bash Bundle/build-app.sh debug          # assemble FanCtl.app
 bash Bundle/install.sh debug            # copy to /Applications + open
 sudo log stream \
-  --predicate 'subsystem == "com.jpdiaz.FanCtl"' \
+  --predicate 'subsystem == "com.juanipis.FanCtl"' \
   --style compact                       # follow helper + app logs
 ```
 
@@ -39,4 +39,4 @@ Include:
 - macOS version (`sw_vers`)
 - Mac model (`sysctl -n hw.model`)
 - Output of `swift run fanctl-cli status`
-- A snippet of `log stream --predicate 'subsystem == "com.jpdiaz.FanCtl"'`
+- A snippet of `log stream --predicate 'subsystem == "com.juanipis.FanCtl"'`

@@ -4,7 +4,7 @@ import FanCtlProtocol
 import ServiceManagement
 import os.log
 
-private let log = Logger(subsystem: "com.jpdiaz.FanCtl", category: "App")
+private let log = Logger(subsystem: "com.juanipis.FanCtl", category: "App")
 
 @main
 struct FanCtlApp: App {

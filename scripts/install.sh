@@ -65,7 +65,7 @@ fi
 # If a previous install exists, quit it first so we can overwrite cleanly.
 if pgrep -x "FanCtlApp" >/dev/null; then
     echo "==> Stopping running FanCtl"
-    osascript -e 'tell application id "com.jpdiaz.FanCtl" to quit' 2>/dev/null || \
+    osascript -e 'tell application id "com.juanipis.FanCtl" to quit' 2>/dev/null || \
         pkill -x FanCtlApp || true
     sleep 1
 fi
@@ -92,6 +92,6 @@ Next:
   3. Click "Retry" in the popover. The hero will light up.
 
 Logs:
-  sudo log stream --predicate 'subsystem == "com.jpdiaz.FanCtl"' --style compact
+  sudo log stream --predicate 'subsystem == "com.juanipis.FanCtl"' --style compact
 
 EOF

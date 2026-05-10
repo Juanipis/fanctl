@@ -47,6 +47,6 @@ jobs:
         run: |
           test -f .build/FanCtl.app/Contents/Info.plist
           test -x .build/FanCtl.app/Contents/MacOS/FanCtlApp
-          test -x .build/FanCtl.app/Contents/MacOS/com.jpdiaz.FanCtl.Helper
-          test -f .build/FanCtl.app/Contents/Library/LaunchDaemons/com.jpdiaz.FanCtl.Helper.plist
+          test -x .build/FanCtl.app/Contents/MacOS/com.juanipis.FanCtl.Helper
+          test -f .build/FanCtl.app/Contents/Library/LaunchDaemons/com.juanipis.FanCtl.Helper.plist
           codesign -dv .build/FanCtl.app

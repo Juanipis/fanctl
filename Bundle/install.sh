@@ -40,8 +40,8 @@ Next steps:
  4. The helper will start. Live RPM and temps appear in the popover.
 
 To inspect the helper:
-   sudo log stream --predicate 'subsystem == "com.jpdiaz.FanCtl"' --style compact
-   sudo launchctl print system/com.jpdiaz.FanCtl.Helper
+   sudo log stream --predicate 'subsystem == "com.juanipis.FanCtl"' --style compact
+   sudo launchctl print system/com.juanipis.FanCtl.Helper
 
 To uninstall:
    Bundle/uninstall.sh

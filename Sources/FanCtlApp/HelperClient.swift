@@ -2,7 +2,7 @@ import Foundation
 import FanCtlProtocol
 import os.log
 
-private let log = Logger(subsystem: "com.jpdiaz.FanCtl", category: "HelperClient")
+private let log = Logger(subsystem: "com.juanipis.FanCtl", category: "HelperClient")
 
 /// XPC client for FanCtlHelper. Not `@MainActor`-isolated as a whole — the
 /// XPC reply blocks fire on `NSXPCConnection`'s internal queue, so we hop
